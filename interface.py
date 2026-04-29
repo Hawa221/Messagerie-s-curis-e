@@ -93,6 +93,7 @@ class AppMessagerie:
 
     def afficher_conversations(self):
         self.vider_fenetre()
+        self.chat_actif = None
 
         tk.Label(self.fenetre, text=f"Bonjour {self.username_actuel} 👋",
                  font=("Arial", 16, "bold"), bg="#1e1e2e", fg="white").pack(pady=20)
@@ -116,17 +117,20 @@ class AppMessagerie:
         popup.title("Nouvelle conversation")
         popup.geometry("300x200")
         popup.configure(bg="#1e1e2e")
+        popup.grab_set()
+        popup.focus_force()
 
         tk.Label(popup, text="Nom d'utilisateur :",
                  bg="#1e1e2e", fg="white").pack(pady=10)
 
         champ = tk.Entry(popup, width=25)
         champ.pack(pady=5)
+        champ.focus()
 
         def confirmer():
             user = champ.get()
             if user == "":
-                messagebox.showerror("Erreur", "Entre un nom d'utilisateur !")
+                messagebox.showerror("Erreur", "Entre un nom d'utilisateur !", parent=popup)
             else:
                 popup.destroy()
                 self.afficher_chat(user)
@@ -135,8 +139,10 @@ class AppMessagerie:
                   bg="#7c3aed", fg="white",
                   command=confirmer).pack(pady=15)
 
+        popup.bind("<Return>", lambda e: confirmer())
     def afficher_chat(self, destinataire):
         self.vider_fenetre()
+        self.chat_actif = destinataire
 
         tk.Label(self.fenetre, text=f"💬 {destinataire}",
                  font=("Arial", 16, "bold"), bg="#1e1e2e", fg="white").pack(pady=10)
@@ -178,6 +184,7 @@ class AppMessagerie:
         self.champ_message.delete(0, "end")
 
     def rafraichir_messages(self, destinataire):
-        self.fenetre.after(3000, lambda: self.rafraichir_messages(destinataire))
+        if hasattr(self, 'chat_actif') and self.chat_actif == destinataire:
+            self.fenetre.after(3000, lambda: self.rafraichir_messages(destinataire))
 
 AppMessagerie()
