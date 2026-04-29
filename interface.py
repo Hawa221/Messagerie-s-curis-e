@@ -17,6 +17,7 @@ class AppMessagerie:
 
     def afficher_connexion(self):
         self.vider_fenetre()
+        self.statut_en_ligne = False
 
         tk.Label(self.fenetre, text="🔐 Messagerie Sécurisée",
                  font=("Arial", 18, "bold"), bg="#1e1e2e", fg="white").pack(pady=30)
@@ -48,6 +49,7 @@ class AppMessagerie:
         else:
             self.username_actuel = username
             self.afficher_conversations()
+            self.statut_en_ligne = True
 
     def afficher_inscription(self):
         self.vider_fenetre()
@@ -97,9 +99,12 @@ class AppMessagerie:
 
         tk.Label(self.fenetre, text=f"Bonjour {self.username_actuel} 👋",
                  font=("Arial", 16, "bold"), bg="#1e1e2e", fg="white").pack(pady=20)
-
+        
         tk.Label(self.fenetre, text="Mes conversations",
                  font=("Arial", 12), bg="#1e1e2e", fg="#a78bfa").pack()
+
+        tk.Label(self.fenetre, text="🟢 En ligne",
+                 font=("Arial", 10), bg="#1e1e2e", fg="#22c55e").pack()
 
         self.cadre_conversations = tk.Frame(self.fenetre, bg="#1e1e2e")
         self.cadre_conversations.pack(fill="both", expand=True, padx=20, pady=10)
@@ -158,6 +163,10 @@ class AppMessagerie:
                                      wrap="word")
         self.zone_messages.pack(padx=10, pady=10)
 
+        tk.Label(self.fenetre, text="⏱️ Les messages disparaissent après 30 secondes",
+                 bg="#1e1e2e", fg="#a78bfa",
+                 font=("Arial", 8, "italic")).pack()
+
         cadre_bas = tk.Frame(self.fenetre, bg="#1e1e2e")
         cadre_bas.pack(fill="x", padx=10, pady=5)
 
@@ -178,10 +187,22 @@ class AppMessagerie:
             return
 
         self.zone_messages.config(state="normal")
-        self.zone_messages.insert("end", f"Moi : {message}\n")
+        
+        # Ajoute un tag unique pour ce message
+        tag = f"msg_{len(self.zone_messages.get('1.0', 'end'))}"
+        self.zone_messages.insert("end", f"Moi : {message} ⏱️\n", tag)
+        
         self.zone_messages.config(state="disabled")
         self.zone_messages.see("end")
         self.champ_message.delete(0, "end")
+
+        # Supprime le message après 30 secondes
+        self.fenetre.after(30000, lambda: self.supprimer_message(tag))
+
+    def supprimer_message(self, tag):
+        self.zone_messages.config(state="normal")
+        self.zone_messages.delete(f"{tag}.first", f"{tag}.last + 1c")
+        self.zone_messages.config(state="disabled")
 
     def rafraichir_messages(self, destinataire):
         if hasattr(self, 'chat_actif') and self.chat_actif == destinataire:
